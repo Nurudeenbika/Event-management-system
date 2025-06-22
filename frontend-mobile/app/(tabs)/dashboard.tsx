@@ -1,3 +1,4 @@
+//app/(tabs)/dashbord
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Appearance,
@@ -715,7 +716,7 @@ const DashboardScreen: React.FC = () => {
                       style={[styles.button, styles.bookButton]}
                       onPress={() => {
                         setShowEventDetails(false);
-                        router.push(`/events/${selectedEvent._id}/book`);
+                        router.push(`/events/${selectedEvent._id}/book` as any);
                       }}
                     >
                       <Text style={styles.buttonText}>Book Ticket</Text>
@@ -728,7 +729,7 @@ const DashboardScreen: React.FC = () => {
                       style={[styles.button, styles.editButton]}
                       onPress={() => {
                         setShowEventDetails(false);
-                        router.push(`/events/${selectedEvent._id}/edit`);
+                        router.push(`/events/${selectedEvent._id}/edit` as any);
                       }}
                     >
                       <Text style={styles.buttonText}>Edit Event</Text>

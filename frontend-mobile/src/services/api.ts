@@ -13,6 +13,7 @@ export interface Event {
   title: string;
   description: string;
   date: string;
+  time: string;
   venue: string;
   location: string;
   category: string;
@@ -449,7 +450,8 @@ class ApiService {
         title: "Tech Conference 2024",
         description:
           "Annual technology conference featuring the latest innovations",
-        date: "2024-07-15T10:00:00Z",
+        date: "2024-07-15",
+        time: "10:00:00Z",
         venue: "Lagos Convention Centre",
         location: "Lagos",
         category: "Technology",
@@ -465,7 +467,8 @@ class ApiService {
         _id: "2",
         title: "Music Festival",
         description: "Three-day music festival with top artists",
-        date: "2024-08-20T18:00:00Z",
+        date: "2024-08-20",
+        time: "18:00:00Z",
         venue: "National Stadium",
         location: "Abuja",
         category: "Music",
