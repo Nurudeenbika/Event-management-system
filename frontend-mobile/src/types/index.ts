@@ -53,6 +53,11 @@ export interface AuthContextType {
     email: string
   ) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
+  registerAdmin: (
+    name: string,
+    email: string,
+    password: string
+  ) => Promise<void>;
 }
 
 export interface EventContextType {

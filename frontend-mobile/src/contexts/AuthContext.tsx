@@ -126,6 +126,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const registerAdmin = async (
+    name: string,
+    email: string,
+    password: string,
+    role: string = "admin"
+  ) => {
+    try {
+      const response = await apiClient.post("/auth/register-admin", {
+        name,
+        email,
+        password,
+        role,
+      });
+
+      setUser(response.data.user);
+      setToken(response.data.token);
+
+      await storage.setItem("authToken", response.data.token);
+      await storage.setItem("user", JSON.stringify(response.data.user));
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -134,6 +158,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     resetPassword,
     logout,
+    registerAdmin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

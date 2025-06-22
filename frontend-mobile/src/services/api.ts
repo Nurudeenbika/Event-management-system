@@ -31,11 +31,13 @@ export interface CreateEventData {
   title: string;
   description: string;
   date: string;
+  time: string;
   venue: string;
   location: string;
   category: string;
   price: number;
   totalSeats: number;
+  availableSeats: number;
 }
 
 export interface UpdateEventData extends Partial<CreateEventData> {

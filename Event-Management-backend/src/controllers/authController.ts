@@ -102,6 +102,55 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
+export const registerAdmin = async (req: Request, res: Response) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Check if user exists
+    let user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+      });
+    }
+
+    // Create new admin user
+    user = new User({
+      name,
+      email,
+      password,
+      role: "admin", // Explicitly set role to admin
+    });
+
+    // Save user
+    await user.save();
+
+    // Generate token
+    const token = generateToken(user._id);
+
+    res.status(201).json({
+      success: true,
+      data: {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+        token,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Error registering admin",
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
+  }
+};
+
 export const getProfile = async (req: AuthRequest, res: Response) => {
   try {
     const user = await User.findById(req.user?.id);

@@ -1,4 +1,5 @@
 const BASE_URL = "http://localhost:5000/api"; // Replace with your backend URL
+// If using Expo, you might need to use the IP address of your machine instead of localhost
 
 export const apiClient = {
   get: async (endpoint: string, token?: string) => {

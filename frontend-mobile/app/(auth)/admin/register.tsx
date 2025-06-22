@@ -6,31 +6,46 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "@/src/contexts/AuthContext";
-import { Colors } from "../../constants/Colors";
+import { Colors } from "../../../constants/Colors";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 
-export default function LoginScreen() {
+export default function AdminRegisterScreen() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useAuth();
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const { registerAdmin } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const colorScheme = Appearance.getColorScheme();
-
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
-
   const styles = createStyles(theme, colorScheme);
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+
     try {
-      await login(email, password);
+      setLoading(true);
+      await registerAdmin(name, email, password);
       router.replace("/(tabs)/dashboard");
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("Admin registration failed:", error);
+      Alert.alert(
+        "Registration Failed",
+        error instanceof Error ? error.message : "Failed to register admin"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,16 +56,23 @@ export default function LoginScreen() {
         style={styles.logoContainer}
       >
         <MaterialIcons name="event" size={28} color={theme.text} />
-        <Text style={styles.brand}>Vasrefil Event Management</Text>
+        <Text style={styles.brand}>Vasrefil Admin Portal</Text>
       </Animated.View>
-      {/* <Animated.Text
+      <Animated.Text
         entering={FadeInUp.delay(300).duration(800)}
         style={styles.title}
       >
-        Login
-      </Animated.Text> */}
-      {/* <Text style={styles.title}>Login</Text> */}
+        Admin Registration
+      </Animated.Text>
 
+      <TextInput
+        style={styles.input}
+        placeholder="Name"
+        placeholderTextColor={theme.placeholder}
+        value={name}
+        onChangeText={setName}
+        autoCapitalize="words"
+      />
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -60,7 +82,6 @@ export default function LoginScreen() {
         keyboardType="email-address"
         autoCapitalize="none"
       />
-
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
@@ -78,27 +99,38 @@ export default function LoginScreen() {
           />
         </TouchableOpacity>
       </View>
-
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Confirm Password"
+          placeholderTextColor={theme.placeholder}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry={!showConfirmPassword}
+        />
+        <TouchableOpacity
+          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+        >
+          <Feather
+            name={showConfirmPassword ? "eye" : "eye-off"}
+            size={20}
+            color={theme.text}
+          />
+        </TouchableOpacity>
+      </View>
       <TouchableOpacity
-        onPress={() => router.push("/(auth)/forgot-password")} // or your desired route
-        style={{ alignSelf: "flex-end", marginBottom: 15 }}
+        style={styles.button}
+        onPress={handleRegister}
+        disabled={loading}
       >
-        <Text style={[styles.linkText, { fontSize: 14 }]}>
-          Forgot Password?
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
-        <Text style={styles.linkText}>
-          Don&apos;t have an account? Register
+        <Text style={styles.buttonText}>
+          {loading ? "Registering..." : "Register Admin"}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => router.push("/(auth)/admin/login")}>
-        <Text style={styles.linkText}>Admin Login</Text>
+        <Text style={styles.linkText}>
+          Already have an account? Admin Login
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -158,11 +190,16 @@ function createStyles(
       alignItems: "center",
       marginBottom: 15,
     },
+    buttonText: {
+      color: "#fff",
+      fontSize: 16,
+      fontWeight: "bold",
+    },
     logoContainer: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 100,
+      marginBottom: 30,
       gap: 8,
     },
     brand: {
@@ -172,11 +209,6 @@ function createStyles(
       textAlign: "center",
       marginBottom: 8,
       color: theme.text,
-    },
-    buttonText: {
-      color: "#fff",
-      fontSize: 16,
-      fontWeight: "bold",
     },
     linkText: {
       textAlign: "center",

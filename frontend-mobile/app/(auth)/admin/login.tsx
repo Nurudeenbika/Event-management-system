@@ -6,31 +6,45 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "@/src/contexts/AuthContext";
-import { Colors } from "../../constants/Colors";
+import { Colors } from "../../../constants/Colors";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 
-export default function LoginScreen() {
+export default function AdminLoginScreen() {
+  const [name, setName] = useState("admin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const colorScheme = Appearance.getColorScheme();
-
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
-
   const styles = createStyles(theme, colorScheme);
 
   const handleLogin = async () => {
     try {
-      await login(email, password);
+      setLoading(true);
+      await login(name, email, password);
+
+      // Check if user is admin after login
+      if (user?.role !== "admin") {
+        throw new Error("Only admin users can access this portal");
+      }
+
       router.replace("/(tabs)/dashboard");
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("Admin login failed:", error);
+      Alert.alert(
+        "Login Failed",
+        error instanceof Error ? error.message : "Failed to login as admin"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,19 +55,12 @@ export default function LoginScreen() {
         style={styles.logoContainer}
       >
         <MaterialIcons name="event" size={28} color={theme.text} />
-        <Text style={styles.brand}>Vasrefil Event Management</Text>
+        <Text style={styles.brand}>Vasrefil Admin Portal</Text>
       </Animated.View>
-      {/* <Animated.Text
-        entering={FadeInUp.delay(300).duration(800)}
-        style={styles.title}
-      >
-        Login
-      </Animated.Text> */}
-      {/* <Text style={styles.title}>Login</Text> */}
 
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder="Admin Email"
         placeholderTextColor={theme.placeholder}
         value={email}
         onChangeText={setEmail}
@@ -80,7 +87,7 @@ export default function LoginScreen() {
       </View>
 
       <TouchableOpacity
-        onPress={() => router.push("/(auth)/forgot-password")} // or your desired route
+        onPress={() => router.push("/(auth)/forgot-password")}
         style={{ alignSelf: "flex-end", marginBottom: 15 }}
       >
         <Text style={[styles.linkText, { fontSize: 14 }]}>
@@ -88,17 +95,18 @@ export default function LoginScreen() {
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
-        <Text style={styles.linkText}>
-          Don&apos;t have an account? Register
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? "Logging in..." : "Admin Login"}
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push("/(auth)/admin/login")}>
-        <Text style={styles.linkText}>Admin Login</Text>
+
+      <TouchableOpacity onPress={() => router.push("/(auth)/admin/register")}>
+        <Text style={styles.linkText}>Need admin access? Register Admin</Text>
       </TouchableOpacity>
     </View>
   );

@@ -63,11 +63,13 @@ const DashboardScreen: React.FC = () => {
   const [eventTitle, setEventTitle] = useState<string>("");
   const [eventDescription, setEventDescription] = useState<string>("");
   const [eventDate, setEventDate] = useState<string>("");
+  const [eventTime, setEventTime] = useState<string>("");
   const [eventVenue, setEventVenue] = useState<string>("");
   const [eventLocation, setEventLocation] = useState<string>("");
   const [eventCategory, setEventCategory] = useState<string>("");
   const [eventPrice, setEventPrice] = useState<string>("");
   const [totalSeats, setTotalSeats] = useState<string>("");
+  const [availableSeats, setAvailableSeats] = useState<string>("");
 
   const colorScheme: ColorSchemeName = Appearance.getColorScheme();
   const theme: Theme = colorScheme === "dark" ? Colors.dark : Colors.light;
@@ -183,11 +185,13 @@ const DashboardScreen: React.FC = () => {
       !eventTitle.trim() ||
       !eventDescription.trim() ||
       !eventDate ||
+      !eventTime.trim() ||
       !eventVenue.trim() ||
       !eventLocation.trim() ||
       !eventCategory.trim() ||
       !eventPrice ||
-      !totalSeats
+      !totalSeats ||
+      !availableSeats.trim()
     ) {
       Alert.alert("Error", "Please fill in all fields");
       return;
@@ -198,11 +202,13 @@ const DashboardScreen: React.FC = () => {
         title: eventTitle,
         description: eventDescription,
         date: eventDate,
+        time: eventTime,
         venue: eventVenue,
         location: eventLocation,
         category: eventCategory,
         price: parseFloat(eventPrice),
         totalSeats: parseInt(totalSeats),
+        availableSeats: parseInt(availableSeats),
       };
 
       const response = await apiService.createEvent(eventData);
@@ -212,11 +218,13 @@ const DashboardScreen: React.FC = () => {
         setEventTitle("");
         setEventDescription("");
         setEventDate("");
+        setEventTime("");
         setEventVenue("");
         setEventLocation("");
         setEventCategory("");
         setEventPrice("");
         setTotalSeats("");
+        setAvailableSeats("");
         setShowCreateModal(false);
 
         Alert.alert("Success", "Event created successfully!");
@@ -548,10 +556,17 @@ const DashboardScreen: React.FC = () => {
 
               <TextInput
                 style={styles.input}
-                placeholder="Date & Time (YYYY-MM-DDTHH:MM:SS)"
+                placeholder="Date (YYYY-MM-DD)"
                 placeholderTextColor={theme.placeholder}
                 value={eventDate}
                 onChangeText={setEventDate}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Time (HH:MM)"
+                placeholderTextColor={theme.placeholder}
+                value={eventTime}
+                onChangeText={setEventTime}
               />
 
               <TextInput
@@ -593,6 +608,14 @@ const DashboardScreen: React.FC = () => {
                 placeholderTextColor={theme.placeholder}
                 value={totalSeats}
                 onChangeText={setTotalSeats}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Available Seats"
+                placeholderTextColor={theme.placeholder}
+                value={availableSeats}
+                onChangeText={setAvailableSeats}
                 keyboardType="numeric"
               />
 
