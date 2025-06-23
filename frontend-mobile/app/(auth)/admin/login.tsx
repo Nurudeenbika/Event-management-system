@@ -18,7 +18,7 @@ export default function AdminLoginScreen() {
   const [name, setName] = useState("admin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login, user } = useAuth();
+  const { loginAdmin, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +29,7 @@ export default function AdminLoginScreen() {
   const handleLogin = async () => {
     try {
       setLoading(true);
-      await login(name, email, password);
+      await loginAdmin(email, password);
 
       // Check if user is admin after login
       if (user?.role !== "admin") {

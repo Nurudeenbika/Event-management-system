@@ -388,6 +388,24 @@ class ApiService {
     return this.client.get(`/events/${eventId}/bookings`);
   }
 
+  // For admin - get all bookings
+  async getAllBookings(params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  }): Promise<ApiResponse<Booking>> {
+    return this.client.get("/admin/bookings", params);
+  }
+
+  // For regular users - get their own bookings
+  async getUserBookings(params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  }): Promise<ApiResponse<Booking>> {
+    return this.client.get("/bookings/user", params);
+  }
+
   // User Management (Admin only)
   async getUsers(params?: {
     page?: number;

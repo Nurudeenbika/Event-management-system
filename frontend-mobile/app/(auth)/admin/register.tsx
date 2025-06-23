@@ -37,7 +37,7 @@ export default function AdminRegisterScreen() {
     try {
       setLoading(true);
       await registerAdmin(name, email, password);
-      router.replace("/(tabs)/dashboard");
+      router.replace("/(auth)/admin/login");
     } catch (error) {
       console.error("Admin registration failed:", error);
       Alert.alert(

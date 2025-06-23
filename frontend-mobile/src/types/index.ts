@@ -40,7 +40,7 @@ export interface Booking {
   numberOfSeats: number;
   totalAmount: number;
   bookingDate: string;
-  status: "confirmed" | "cancelled";
+  status: "confirmed" | "cancelled" | "pending";
 }
 
 export interface AuthContextType {
@@ -58,6 +58,7 @@ export interface AuthContextType {
     email: string,
     password: string
   ) => Promise<void>;
+  loginAdmin: (email: string, password: string) => Promise<void>;
 }
 
 export interface EventContextType {
