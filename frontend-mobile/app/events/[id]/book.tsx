@@ -1,4 +1,4 @@
-//app/events/[id]/book.tsx
+//app/events/[id]/book.tsx - Complete version
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -39,7 +39,6 @@ const BookEventScreen: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [seatsToBook, setSeatsToBook] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
-  const [booking, setBooking] = useState<boolean>(false);
 
   const colorScheme: ColorSchemeName = Appearance.getColorScheme();
   const theme: Theme = colorScheme === "dark" ? Colors.dark : Colors.light;
@@ -70,53 +69,11 @@ const BookEventScreen: React.FC = () => {
     }
   };
 
-  const handleBookTicket = async () => {
+  const handleProceedToBooking = () => {
     if (!event || !user) return;
 
-    Alert.alert(
-      "Confirm Booking",
-      `Book ${seatsToBook} seat(s) for ${event.title}?\n\nTotal: ₦${(
-        event.price * seatsToBook
-      ).toLocaleString()}`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Book Now",
-          onPress: async () => {
-            try {
-              setBooking(true);
-              const response = await apiService.createBooking({
-                eventId: event._id,
-                numberOfTickets: seatsToBook,
-              });
-
-              if (response.success) {
-                Alert.alert("Success!", "Your booking has been confirmed!", [
-                  {
-                    text: "View Bookings",
-                    onPress: () => router.push("/(tabs)/bookings"),
-                  },
-                  {
-                    text: "OK",
-                    onPress: () => router.back(),
-                  },
-                ]);
-              } else {
-                Alert.alert(
-                  "Error",
-                  response.error || "Failed to create booking"
-                );
-              }
-            } catch (error) {
-              console.error("Booking error:", error);
-              Alert.alert("Error", "Failed to create booking");
-            } finally {
-              setBooking(false);
-            }
-          },
-        },
-      ]
-    );
+    // Navigate to confirmation page with event id and selected seats
+    router.push(`/events/${event._id}/confirm-booking?seats=${seatsToBook}`);
   };
 
   const formatDate = (dateString: string): string => {
@@ -285,51 +242,41 @@ const BookEventScreen: React.FC = () => {
           </Animated.View>
         )}
 
-        {/* Status Messages */}
+        {/* Unavailable Event Message */}
         {!canBookEvent() && (
           <Animated.View
             entering={FadeInUp.delay(400).duration(800)}
-            style={styles.statusContainer}
+            style={styles.unavailableContainer}
           >
-            {isEventPast(event.date) ? (
-              <View style={styles.statusMessage}>
-                <MaterialIcons name="event-busy" size={48} color="#8E8E93" />
-                <Text style={styles.statusTitle}>Event Has Passed</Text>
-                <Text style={styles.statusSubtitle}>
-                  This event has already taken place
-                </Text>
-              </View>
-            ) : event.availableSeats === 0 ? (
-              <View style={styles.statusMessage}>
-                <MaterialIcons name="event-seat" size={48} color="#FF3B30" />
-                <Text style={styles.statusTitle}>Sold Out</Text>
-                <Text style={styles.statusSubtitle}>
-                  All tickets for this event have been sold
-                </Text>
-              </View>
-            ) : null}
+            <MaterialIcons name="event-busy" size={48} color="#FF6B6B" />
+            <Text style={styles.unavailableTitle}>
+              {isEventPast(event.date) ? "Event Has Passed" : "Event Sold Out"}
+            </Text>
+            <Text style={styles.unavailableText}>
+              {isEventPast(event.date)
+                ? "This event has already taken place."
+                : "Unfortunately, all tickets for this event have been sold."}
+            </Text>
           </Animated.View>
         )}
       </ScrollView>
 
-      {/* Book Button */}
+      {/* Bottom Action Button */}
       {canBookEvent() && (
         <Animated.View
           entering={FadeInDown.delay(600).duration(800)}
-          style={styles.bookButtonContainer}
+          style={styles.bottomContainer}
         >
           <TouchableOpacity
-            style={[styles.bookButton, booking && styles.bookButtonDisabled]}
-            onPress={handleBookTicket}
-            disabled={booking}
+            style={styles.proceedButton}
+            onPress={handleProceedToBooking}
+            activeOpacity={0.8}
           >
-            {booking ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.bookButtonText}>
-                Book {seatsToBook} {seatsToBook === 1 ? "Ticket" : "Tickets"}
-              </Text>
-            )}
+            <Text style={styles.proceedButtonText}>
+              Proceed to Booking - ₦
+              {(event.price * seatsToBook).toLocaleString()}
+            </Text>
+            <Ionicons name="arrow-forward" size={20} color="#fff" />
           </TouchableOpacity>
         </Animated.View>
       )}
@@ -349,9 +296,9 @@ const createStyles = (theme: Theme, colorScheme: ColorSchemeName) =>
       alignItems: "center",
     },
     loadingText: {
+      marginTop: 16,
       fontSize: 16,
       color: theme.text,
-      marginTop: 16,
     },
     errorContainer: {
       flex: 1,
@@ -361,15 +308,14 @@ const createStyles = (theme: Theme, colorScheme: ColorSchemeName) =>
     },
     errorText: {
       fontSize: 18,
-      fontWeight: "600",
-      color: "#FF3B30",
+      color: theme.text,
       marginTop: 16,
+      marginBottom: 24,
       textAlign: "center",
     },
     backButton: {
-      marginTop: 20,
       backgroundColor: "#007AFF",
-      paddingHorizontal: 20,
+      paddingHorizontal: 24,
       paddingVertical: 12,
       borderRadius: 8,
     },
@@ -380,8 +326,8 @@ const createStyles = (theme: Theme, colorScheme: ColorSchemeName) =>
     },
     header: {
       flexDirection: "row",
-      justifyContent: "space-between",
       alignItems: "center",
+      justifyContent: "space-between",
       paddingHorizontal: 20,
       paddingTop: 60,
       paddingBottom: 20,
@@ -391,7 +337,7 @@ const createStyles = (theme: Theme, colorScheme: ColorSchemeName) =>
     },
     headerTitle: {
       fontSize: 18,
-      fontWeight: "bold",
+      fontWeight: "600",
       color: theme.text,
     },
     placeholder: {
@@ -400,17 +346,20 @@ const createStyles = (theme: Theme, colorScheme: ColorSchemeName) =>
     eventContainer: {
       backgroundColor: colorScheme === "dark" ? "#1C1C1E" : "#fff",
       margin: 20,
-      padding: 20,
       borderRadius: 16,
+      padding: 20,
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
       shadowOpacity: 0.1,
       shadowRadius: 8,
       elevation: 4,
     },
     eventTitle: {
       fontSize: 24,
-      fontWeight: "bold",
+      fontWeight: "700",
       color: theme.text,
       marginBottom: 16,
     },
@@ -429,26 +378,29 @@ const createStyles = (theme: Theme, colorScheme: ColorSchemeName) =>
       flex: 1,
     },
     description: {
-      fontSize: 16,
+      fontSize: 15,
       color: theme.text,
-      lineHeight: 24,
+      lineHeight: 22,
       opacity: 0.8,
     },
     bookingContainer: {
       backgroundColor: colorScheme === "dark" ? "#1C1C1E" : "#fff",
-      margin: 20,
-      marginTop: 0,
-      padding: 20,
+      marginHorizontal: 20,
+      marginBottom: 20,
       borderRadius: 16,
+      padding: 20,
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
       shadowOpacity: 0.1,
       shadowRadius: 8,
       elevation: 4,
     },
     sectionTitle: {
-      fontSize: 20,
-      fontWeight: "bold",
+      fontSize: 18,
+      fontWeight: "600",
       color: theme.text,
       marginBottom: 20,
     },
@@ -459,15 +411,15 @@ const createStyles = (theme: Theme, colorScheme: ColorSchemeName) =>
       marginBottom: 24,
     },
     seatButton: {
+      backgroundColor: "#007AFF",
       width: 44,
       height: 44,
       borderRadius: 22,
-      backgroundColor: "#007AFF",
-      alignItems: "center",
       justifyContent: "center",
+      alignItems: "center",
     },
     seatButtonDisabled: {
-      backgroundColor: "#8E8E93",
+      backgroundColor: "#C7C7CC",
     },
     seatCount: {
       marginHorizontal: 40,
@@ -475,17 +427,18 @@ const createStyles = (theme: Theme, colorScheme: ColorSchemeName) =>
     },
     seatCountText: {
       fontSize: 32,
-      fontWeight: "bold",
+      fontWeight: "700",
       color: theme.text,
     },
     seatCountLabel: {
       fontSize: 14,
       color: theme.text,
       opacity: 0.6,
+      marginTop: 4,
     },
     priceBreakdown: {
       borderTopWidth: 1,
-      borderTopColor: colorScheme === "dark" ? "#2C2C2E" : "#E5E5EA",
+      borderTopColor: colorScheme === "dark" ? "#38383A" : "#E5E5EA",
       paddingTop: 16,
     },
     priceRow: {
@@ -505,59 +458,82 @@ const createStyles = (theme: Theme, colorScheme: ColorSchemeName) =>
       fontWeight: "500",
     },
     totalRow: {
-      borderTopWidth: 1,
-      borderTopColor: colorScheme === "dark" ? "#2C2C2E" : "#E5E5EA",
-      paddingTop: 12,
       marginTop: 8,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: colorScheme === "dark" ? "#38383A" : "#E5E5EA",
+      marginBottom: 0,
     },
     totalLabel: {
       fontSize: 18,
-      fontWeight: "bold",
+      fontWeight: "600",
       color: theme.text,
     },
     totalValue: {
       fontSize: 18,
-      fontWeight: "bold",
+      fontWeight: "700",
       color: "#007AFF",
     },
-    statusContainer: {
-      margin: 20,
-      marginTop: 0,
-    },
-    statusMessage: {
+    unavailableContainer: {
       alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colorScheme === "dark" ? "#1C1C1E" : "#fff",
+      marginHorizontal: 20,
+      marginBottom: 20,
+      borderRadius: 16,
       padding: 40,
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 4,
     },
-    statusTitle: {
+    unavailableTitle: {
       fontSize: 20,
-      fontWeight: "bold",
-      color: theme.text,
+      fontWeight: "600",
+      color: "#FF6B6B",
       marginTop: 16,
+      marginBottom: 8,
     },
-    statusSubtitle: {
+    unavailableText: {
       fontSize: 16,
       color: theme.text,
-      opacity: 0.6,
+      opacity: 0.7,
       textAlign: "center",
-      marginTop: 8,
+      lineHeight: 22,
     },
-    bookButtonContainer: {
-      padding: 20,
-      paddingBottom: 40,
+    bottomContainer: {
+      backgroundColor: theme.background,
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      paddingBottom: 34,
+      borderTopWidth: 1,
+      borderTopColor: colorScheme === "dark" ? "#38383A" : "#E5E5EA",
     },
-    bookButton: {
-      backgroundColor: "#34C759",
+    proceedButton: {
+      backgroundColor: "#007AFF",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
       paddingVertical: 16,
       borderRadius: 12,
-      alignItems: "center",
+      shadowColor: "#007AFF",
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 6,
     },
-    bookButtonDisabled: {
-      backgroundColor: "#8E8E93",
-    },
-    bookButtonText: {
-      fontSize: 18,
-      fontWeight: "bold",
+    proceedButtonText: {
+      fontSize: 16,
+      fontWeight: "600",
       color: "#fff",
+      marginRight: 8,
     },
   });
 
