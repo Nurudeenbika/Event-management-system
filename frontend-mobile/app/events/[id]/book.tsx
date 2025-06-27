@@ -86,8 +86,8 @@ const BookEventScreen: React.FC = () => {
             try {
               setBooking(true);
               const response = await apiService.createBooking({
-                event: event._id,
-                seatsBooked: seatsToBook,
+                eventId: event._id,
+                numberOfTickets: seatsToBook,
               });
 
               if (response.success) {

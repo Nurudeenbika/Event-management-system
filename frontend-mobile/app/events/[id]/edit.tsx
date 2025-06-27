@@ -11,11 +11,12 @@ import {
   ActivityIndicator,
   ColorSchemeName,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { router, useLocalSearchParams } from "expo-router";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { Colors } from "@/constants/Colors";
 import Animated, { FadeInUp } from "react-native-reanimated";
-import { MaterialIcons, Feather, AntDesign } from "@expo/vector-icons";
+import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { apiService, Event, UpdateEventData } from "@/src/services/api";
 
 interface Theme {
@@ -230,8 +231,11 @@ const EditEventScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Header */}
       <Animated.View entering={FadeInUp.duration(800)} style={styles.header}>
-        <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
-          <AntDesign name="arrowleft" size={24} color={theme.text} />
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit Event</Text>
         <View style={styles.headerSpacer} />
@@ -319,7 +323,7 @@ const EditEventScreen: React.FC = () => {
 
           <Text style={styles.sectionTitle}>Event Details</Text>
 
-          <View style={styles.inputGroup}>
+          {/* <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Category</Text>
             <TextInput
               style={styles.input}
@@ -328,6 +332,24 @@ const EditEventScreen: React.FC = () => {
               value={eventCategory}
               onChangeText={setEventCategory}
             />
+          </View> */}
+          <View>
+            <Picker
+              selectedValue={eventCategory}
+              onValueChange={(itemValue) => setEventCategory(itemValue)}
+              style={[styles.input, styles.picker]}
+              dropdownIconColor={theme.text}
+              mode="dropdown" // Android only
+            >
+              <Picker.Item label="Select Category" value="" />
+              {categories.map((category) => (
+                <Picker.Item
+                  key={category}
+                  label={category}
+                  value={category.toLowerCase().replace(/\s+/g, "-")}
+                />
+              ))}
+            </Picker>
           </View>
 
           <View style={styles.inputGroup}>
@@ -518,6 +540,11 @@ const createStyles = (theme: Theme, colorScheme: ColorSchemeName) =>
       color: theme.text,
       marginTop: 16,
       marginBottom: 24,
+    },
+    picker: {
+      color: theme.text,
+      backgroundColor: theme.background,
+      height: 50,
     },
   });
 

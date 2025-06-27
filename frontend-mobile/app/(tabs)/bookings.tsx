@@ -65,12 +65,12 @@ interface BookingResponse {
     total: number;
     pages: number;
   };
-  stats?: Array<{
+  stats?: {
     _id: string;
     count: number;
     totalSeats: number;
     totalRevenue: number;
-  }>;
+  }[];
 }
 
 interface Theme {
@@ -98,12 +98,12 @@ const BookingsScreen: React.FC = () => {
     pages: 0,
   });
   const [stats, setStats] = useState<
-    Array<{
+    {
       _id: string;
       count: number;
       totalSeats: number;
       totalRevenue: number;
-    }>
+    }[]
   >([]);
 
   const colorScheme: ColorSchemeName = Appearance.getColorScheme();

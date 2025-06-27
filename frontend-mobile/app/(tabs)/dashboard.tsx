@@ -26,6 +26,7 @@ import {
   AntDesign,
   Ionicons,
 } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
 import {
   apiService,
   Event,
@@ -586,13 +587,31 @@ const DashboardScreen: React.FC = () => {
                 onChangeText={setEventLocation}
               />
 
-              <TextInput
+              {/* <TextInput
                 style={styles.input}
                 placeholder="Category"
                 placeholderTextColor={theme.placeholder}
                 value={eventCategory}
                 onChangeText={setEventCategory}
-              />
+              /> */}
+              <View>
+                <Picker
+                  selectedValue={eventCategory}
+                  onValueChange={(itemValue) => setEventCategory(itemValue)}
+                  style={[styles.input, styles.picker]}
+                  dropdownIconColor={theme.text}
+                  mode="dropdown" // Android only
+                >
+                  <Picker.Item label="Select Category" value="" />
+                  {categories.map((category) => (
+                    <Picker.Item
+                      key={category}
+                      label={category}
+                      value={category.toLowerCase().replace(/\s+/g, "-")}
+                    />
+                  ))}
+                </Picker>
+              </View>
 
               <TextInput
                 style={styles.input}
@@ -1023,6 +1042,18 @@ const createStyles = (theme: Theme, colorScheme: ColorSchemeName) =>
     },
     deleteButton: {
       backgroundColor: "#FF3B30",
+    },
+    // pickerContainer: {
+    //   borderWidth: 1,
+    //   borderColor: theme.placeholder,
+    //   borderRadius: 8,
+    //   marginVertical: 8,
+    //   overflow: "hidden",
+    // },
+    picker: {
+      color: theme.text,
+      backgroundColor: theme.background,
+      height: 50,
     },
   });
 
