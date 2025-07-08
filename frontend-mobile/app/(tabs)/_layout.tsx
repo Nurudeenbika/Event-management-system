@@ -49,7 +49,7 @@ export default function TabLayout() {
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 16 }}>🔍</Text>
+            <Text style={{ color, fontSize: 16 }}>📊</Text>
           ),
         }}
       />

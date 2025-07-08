@@ -9,6 +9,7 @@ const API_TIMEOUT = 10000; // 10 seconds
 
 // Types and Interfaces
 export interface Event {
+  event(event: any): unknown;
   _id: string;
   title: string;
   description: string;
@@ -82,6 +83,7 @@ export interface User {
 }
 
 export interface Booking {
+  booking: any;
   _id: string;
   eventId: string;
   userId: string;
@@ -362,6 +364,14 @@ class ApiService {
   async createBooking(bookingData: {
     eventId: string;
     numberOfTickets: number;
+    bookingDetails: {
+      fullName: string;
+      email: string;
+      phone: string;
+      emergencyContact: string;
+      emergencyPhone: string;
+      specialRequests: string;
+    };
   }): Promise<ApiResponse<Booking>> {
     return this.client.post("/bookings", bookingData);
   }

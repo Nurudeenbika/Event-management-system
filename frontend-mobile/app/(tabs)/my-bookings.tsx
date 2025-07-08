@@ -135,7 +135,7 @@ const BookingsScreen: React.FC = () => {
         response = await apiService.getUserBookings(params);
       }
 
-      if (response.success && response.data) {
+      if (response.data) {
         const {
           bookings: newBookings,
           pagination: newPagination,
