@@ -4,12 +4,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Base Configuration
-const API_BASE_URL = "http://localhost:5000/api"; // Replace with your actual API URL
+const API_BASE_URL = "http://172.26.102.136:5000/api"; // Replace with your actual API URL
 const API_TIMEOUT = 10000; // 10 seconds
 
 // Types and Interfaces
 export interface Event {
-  event(event: any): unknown;
   _id: string;
   title: string;
   description: string;
@@ -89,17 +88,23 @@ export interface Booking {
   userId: string;
   userName: string;
   userEmail: string;
-  numberOfTickets: number;
+  seatsBooked: number;
   totalAmount: number;
   bookingDate: string;
   status: "confirmed" | "cancelled" | "pending";
   paymentStatus: "paid" | "pending" | "failed";
-  bookingReference: string;
+  bookingReference: {
+    type: string;
+    required: true;
+    unique: true;
+  };
 }
 
 export interface ApiResponse<T = any> {
   success: boolean;
-  data?: T;
+  data?: {
+    event: T;
+  };
   error?: string;
   message?: string;
   pagination?: {
@@ -198,6 +203,7 @@ class HttpClient {
   ): Promise<ApiResponse<T>> {
     try {
       const token = await this.getAuthToken();
+      console.log("Making request to:", endpoint, "with token:", token);
       const url = `${this.baseURL}${endpoint}`;
 
       const config: RequestInit = {
@@ -362,8 +368,8 @@ class ApiService {
 
   // Booking Methods
   async createBooking(bookingData: {
-    eventId: string;
-    numberOfTickets: number;
+    event: string;
+    seatsBooked: number;
     bookingDetails: {
       fullName: string;
       email: string;
@@ -371,6 +377,7 @@ class ApiService {
       emergencyContact: string;
       emergencyPhone: string;
       specialRequests: string;
+      agreeToTerms: boolean;
     };
   }): Promise<ApiResponse<Booking>> {
     return this.client.post("/bookings", bookingData);
@@ -490,6 +497,9 @@ class ApiService {
         createdAt: "2024-06-01T10:00:00Z",
         updatedAt: "2024-06-01T10:00:00Z",
         status: "active",
+        event: function (event: any): unknown {
+          throw new Error("Function not implemented.");
+        },
       },
       {
         _id: "2",
@@ -507,6 +517,9 @@ class ApiService {
         createdAt: "2024-06-05T10:00:00Z",
         updatedAt: "2024-06-05T10:00:00Z",
         status: "active",
+        event: function (event: any): unknown {
+          throw new Error("Function not implemented.");
+        },
       },
     ];
 

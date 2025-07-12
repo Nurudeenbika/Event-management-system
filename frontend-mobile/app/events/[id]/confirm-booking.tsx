@@ -154,8 +154,8 @@ const ConfirmBookingScreen: React.FC = () => {
             try {
               setBooking(true);
               const response = await apiService.createBooking({
-                eventId: event._id,
-                numberOfTickets: seatsToBook,
+                event: event._id,
+                seatsBooked: seatsToBook,
                 bookingDetails: {
                   fullName: formData.fullName,
                   email: formData.email,
@@ -163,29 +163,34 @@ const ConfirmBookingScreen: React.FC = () => {
                   emergencyContact: formData.emergencyContact,
                   emergencyPhone: formData.emergencyPhone,
                   specialRequests: formData.specialRequests,
+                  agreeToTerms: formData?.agreeToTerms,
                 },
               });
 
-              if (response.success) {
+              if (response.success && response.data) {
+                // Show success alert and redirect to bookings
                 Alert.alert(
-                  "Booking Confirmed!",
-                  "Your booking has been successfully confirmed. You will receive a confirmation email shortly.",
+                  "Booking Successful!",
+                  `Your booking for ${event.title} has been confirmed. You will receive a confirmation email shortly.`,
                   [
                     {
-                      text: "View Bookings",
-                      onPress: () => router.push("/(tabs)/bookings"),
-                    },
-                    {
-                      text: "OK",
-                      onPress: () => router.push("/(tabs)/"),
+                      text: "View My Bookings",
+                      onPress: () => router.push("/bookings"),
                     },
                   ]
                 );
+                console.log("response.data.event:", response.data.event);
+                //console.log("response.success:", response.success);
               } else {
                 Alert.alert(
                   "Error",
                   response.error || "Failed to create booking"
                 );
+                console.error(
+                  "Booking error:",
+                  response.error || "Unknown error"
+                );
+                console.log("Booking API response:", response);
               }
             } catch (error) {
               console.error("Booking error:", error);

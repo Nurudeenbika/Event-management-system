@@ -5,6 +5,7 @@ export default function Layout() {
     <Stack>
       <Stack.Screen name="edit" options={{ headerShown: false }} />
       <Stack.Screen name="book" options={{ headerShown: false }} />
+      <Stack.Screen name="confirm-booking" options={{ headerShown: false }} />
     </Stack>
   );
 }
