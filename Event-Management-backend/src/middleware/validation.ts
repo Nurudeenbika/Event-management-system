@@ -58,9 +58,57 @@ export const eventSchema = Joi.object({
   imageUrl: Joi.string().uri().optional(),
 });
 
+// export const bookingSchema = Joi.object({
+//   event: Joi.string().required(),
+//   seatsBooked: Joi.number().min(1).max(10).required(),
+
+// });
+
 export const bookingSchema = Joi.object({
-  event: Joi.string().required(),
-  seatsBooked: Joi.number().min(1).max(10).required(),
+  event: Joi.string().required().messages({
+    "string.empty": "Event ID is required",
+    "any.required": "Event ID is required",
+  }),
+  seatsBooked: Joi.number().min(1).max(10).required().messages({
+    "number.base": "Number of tickets must be a number",
+    "number.min": "At least 1 ticket must be booked",
+    "number.max": "Maximum of 10 tickets per booking",
+    "any.required": "Number of tickets is required",
+  }),
+  bookingDetails: Joi.object({
+    fullName: Joi.string().min(2).max(100).required().messages({
+      "string.empty": "Full name is required",
+      "string.min": "Full name must be at least 2 characters",
+      "any.required": "Full name is required",
+    }),
+    email: Joi.string().email().required().messages({
+      "string.email": "Please enter a valid email",
+      "string.empty": "Email is required",
+      "any.required": "Email is required",
+    }),
+    phone: Joi.string()
+      .pattern(/^\+?[\d\s-()]{10,}$/)
+      .required()
+      .messages({
+        "string.pattern.base": "Please enter a valid phone number",
+        "string.empty": "Phone number is required",
+        "any.required": "Phone number is required",
+      }),
+    emergencyContact: Joi.string().min(2).max(100).required().messages({
+      "string.empty": "Emergency contact is required",
+      "string.min": "Emergency contact must be at least 2 characters",
+      "any.required": "Emergency contact is required",
+    }),
+    emergencyPhone: Joi.string()
+      .pattern(/^\+?[\d\s-()]{10,}$/)
+      .required()
+      .messages({
+        "string.pattern.base": "Please enter a valid emergency phone number",
+        "string.empty": "Emergency phone is required",
+        "any.required": "Emergency phone is required",
+      }),
+    specialRequests: Joi.string().allow("").optional(),
+  }).required(),
 });
 
 export const validateRegister = validateRequest(registerSchema);

@@ -3,19 +3,55 @@ import mongoose from "mongoose";
 import Booking from "../models/Booking";
 import Event from "../models/Event";
 import { AuthRequest } from "../types";
+import { v4 as uuidv4 } from "uuid";
+
+// Mock payment service - replace with your actual payment provider
+const processPayment = async (amount: number, paymentDetails: any) => {
+  try {
+    // Simulate payment processing without transaction
+    console.log(`Processing payment of $${amount}`);
+
+    // Simulate API call delay
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Mock successful payment response
+    return {
+      success: true,
+      transactionId: `txn_${Date.now()}`,
+      amount,
+      status: "completed",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Payment failed",
+    };
+  }
+};
 
 export const createBooking = async (req: AuthRequest, res: Response) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const { event: eventId, seatsBooked } = req.body;
+    const {
+      event: eventIdRaw,
+      seatsBooked,
+      paymentDetails,
+      bookingDetails,
+    } = req.body;
     const userId = req.user?.id;
 
-    // Check if event exists
-    const event = await Event.findById(eventId).session(session);
+    // Ensure valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(eventIdRaw)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Event ID",
+      });
+    }
+
+    const eventId = new mongoose.Types.ObjectId(eventIdRaw);
+
+    // Check event existence
+    const event = await Event.findById(eventId);
     if (!event) {
-      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Event not found",
@@ -24,22 +60,20 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
 
     // Check if event is in the future
     if (event.date < new Date()) {
-      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Cannot book tickets for past events",
       });
     }
 
-    // Check if user already has a booking for this event
+    // Check for existing confirmed booking
     const existingBooking = await Booking.findOne({
       user: userId,
       event: eventId,
       status: "confirmed",
-    }).session(session);
+    });
 
     if (existingBooking) {
-      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "You already have a booking for this event",
@@ -48,7 +82,6 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
 
     // Check seat availability
     if (event.availableSeats < seatsBooked) {
-      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: `Only ${event.availableSeats} seats available`,
@@ -58,6 +91,17 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
     // Calculate total amount
     const totalAmount = event.price * seatsBooked;
 
+    // Process payment first
+    const paymentResult = await processPayment(totalAmount, paymentDetails);
+
+    if (!paymentResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment failed",
+        error: paymentResult.error,
+      });
+    }
+
     // Create booking
     const booking = new Booking({
       user: userId,
@@ -65,15 +109,17 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
       seatsBooked,
       totalAmount,
       status: "confirmed",
+      paymentId: paymentResult.transactionId,
+      bookingDate: new Date(),
+      bookingDetails,
+      bookingReference: uuidv4(),
     });
 
-    await booking.save({ session });
+    await booking.save();
 
     // Update available seats
     event.availableSeats -= seatsBooked;
-    await event.save({ session });
-
-    await session.commitTransaction();
+    await event.save();
 
     // Populate booking for response
     await booking.populate([
@@ -84,13 +130,117 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
     res.status(201).json({
       success: true,
       message: "Booking created successfully",
+      data: {
+        booking,
+        payment: {
+          transactionId: paymentResult.transactionId,
+          amount: totalAmount,
+          status: paymentResult.status,
+        },
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error creating booking",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Updated cancel booking to handle refunds
+export const cancelBooking = async (req: AuthRequest, res: Response) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    // Find the booking
+    const booking = await Booking.findOne({ _id: id, user: userId }).session(
+      session
+    );
+
+    if (!booking) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    // Check if booking is already cancelled
+    if (booking.status === "cancelled") {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Booking is already cancelled",
+      });
+    }
+
+    // Find the event to restore seats
+    const event = await Event.findById(booking.event).session(session);
+    if (!event) {
+      await session.abortTransaction();
+      return res.status(404).json({
+        success: false,
+        message: "Event not found",
+      });
+    }
+
+    // Check if event has already passed (optional business rule)
+    const now = new Date();
+    const eventDate = new Date(event.date);
+    const hoursDifference =
+      (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    if (hoursDifference < 24) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Cannot cancel booking less than 24 hours before the event",
+      });
+    }
+
+    // Update booking status
+    booking.status = "cancelled";
+    await booking.save({ session });
+
+    // Restore available seats
+    event.availableSeats += booking.seatsBooked;
+    await event.save({ session });
+
+    await session.commitTransaction();
+
+    // Process refund AFTER successful cancellation (outside transaction)
+    if (booking.paymentId) {
+      try {
+        // TODO: Implement actual refund logic here
+        console.log(`Processing refund for payment ${booking.paymentId}`);
+
+        // Update booking with refund status
+        await Booking.findByIdAndUpdate(booking._id, {
+          paymentStatus: "refunded",
+          refundedAt: new Date(),
+        });
+      } catch (refundError) {
+        console.error("Refund failed:", refundError);
+        // Booking is still cancelled, but refund failed
+        // You might want to handle this case differently
+      }
+    }
+
+    res.json({
+      success: true,
+      message: "Booking cancelled successfully",
       data: { booking },
     });
   } catch (error) {
     await session.abortTransaction();
     res.status(500).json({
       success: false,
-      message: "Error creating booking",
+      message: "Error cancelling booking",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   } finally {
@@ -98,6 +248,7 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// Rest of your existing functions remain the same...
 export const getUserBookings = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -168,89 +319,6 @@ export const getBookingById = async (req: AuthRequest, res: Response) => {
     });
   }
 };
-
-export const cancelBooking = async (req: AuthRequest, res: Response) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    const { id } = req.params;
-    const userId = req.user?.id;
-
-    // Find the booking
-    const booking = await Booking.findOne({ _id: id, user: userId }).session(
-      session
-    );
-
-    if (!booking) {
-      await session.abortTransaction();
-      return res.status(404).json({
-        success: false,
-        message: "Booking not found",
-      });
-    }
-
-    // Check if booking is already cancelled
-    if (booking.status === "cancelled") {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Booking is already cancelled",
-      });
-    }
-
-    // Find the event to restore seats
-    const event = await Event.findById(booking.event).session(session);
-    if (!event) {
-      await session.abortTransaction();
-      return res.status(404).json({
-        success: false,
-        message: "Event not found",
-      });
-    }
-
-    // Check if event has already passed (optional business rule)
-    const now = new Date();
-    const eventDate = new Date(event.date);
-    const hoursDifference =
-      (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-    if (hoursDifference < 24) {
-      await session.abortTransaction();
-      return res.status(400).json({
-        success: false,
-        message: "Cannot cancel booking less than 24 hours before the event",
-      });
-    }
-
-    // Update booking status
-    booking.status = "cancelled";
-    await booking.save({ session });
-
-    // Restore available seats
-    event.availableSeats += booking.seatsBooked;
-    await event.save({ session });
-
-    await session.commitTransaction();
-
-    res.json({
-      success: true,
-      message: "Booking cancelled successfully",
-      data: { booking },
-    });
-  } catch (error) {
-    await session.abortTransaction();
-    res.status(500).json({
-      success: false,
-      message: "Error cancelling booking",
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
-  } finally {
-    session.endSession();
-  }
-};
-
-// Add these functions to your bookingController.ts file
 
 export const getAllBookings = async (req: AuthRequest, res: Response) => {
   try {

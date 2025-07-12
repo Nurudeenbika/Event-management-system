@@ -6,10 +6,19 @@ export interface IBooking extends Document {
   event: Types.ObjectId;
   seatsBooked: number;
   totalAmount: number;
-  status: "confirmed" | "cancelled" | "pending";
+  status: "confirmed" | "cancelled" | "pending" | "paid" | "refunded";
   bookingDate: Date;
+  paymentId?: string;
   createdAt: Date;
   updatedAt: Date;
+  bookingDetails: {
+    fullName: string;
+    email: string;
+    phone: string;
+    emergencyContact: string;
+    emergencyPhone: string;
+    specialRequests?: string;
+  };
 }
 
 // Mongoose schema definition
@@ -26,9 +35,11 @@ const bookingSchema = new Schema<IBooking>(
       required: [true, "Event is required"],
     },
     seatsBooked: {
+      // Changed from seatsBooked to match frontend
       type: Number,
-      required: [true, "Number of seats is required"],
-      min: [1, "At least 1 seat must be booked"],
+      required: [true, "Number of tickets is required"],
+      min: [1, "At least 1 ticket must be booked"],
+      max: [10, "Maximum of 10 tickets per booking"],
     },
     totalAmount: {
       type: Number,
@@ -38,14 +49,53 @@ const bookingSchema = new Schema<IBooking>(
     status: {
       type: String,
       enum: {
-        values: ["confirmed", "cancelled", "pending"],
-        message: "Status must be either confirmed, cancelled, or pending",
+        values: ["confirmed", "cancelled", "pending", "paid", "refunded"],
+        message: "Invalid booking status",
       },
       default: "pending",
     },
     bookingDate: {
       type: Date,
       default: Date.now,
+    },
+    bookingDetails: {
+      // Added to store form data
+      fullName: {
+        type: String,
+        required: [true, "Full name is required"],
+      },
+      email: {
+        type: String,
+        required: [true, "Email is required"],
+        validate: {
+          validator: (v: string) => /\S+@\S+\.\S+/.test(v),
+          message: "Please enter a valid email",
+        },
+      },
+      phone: {
+        type: String,
+        required: [true, "Phone number is required"],
+        validate: {
+          validator: (v: string) => /^\+?[\d\s-()]{10,}$/.test(v),
+          message: "Please enter a valid phone number",
+        },
+      },
+      emergencyContact: {
+        type: String,
+        required: [true, "Emergency contact is required"],
+      },
+      emergencyPhone: {
+        type: String,
+        required: [true, "Emergency phone is required"],
+        validate: {
+          validator: (v: string) => /^\+?[\d\s-()]{10,}$/.test(v),
+          message: "Please enter a valid emergency phone number",
+        },
+      },
+      specialRequests: {
+        type: String,
+        default: "",
+      },
     },
   },
   {

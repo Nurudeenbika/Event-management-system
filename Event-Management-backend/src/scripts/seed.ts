@@ -198,6 +198,14 @@ const seedData = async () => {
         seatsBooked: 2,
         totalAmount: 50000,
         status: "confirmed",
+        bookingDetails: {
+          fullName: "John Doe",
+          email: "john@example.com",
+          phone: "+2348012345678",
+          emergencyContact: "Jane Doe",
+          emergencyPhone: "+2348098765432",
+          specialRequests: "Vegetarian meal",
+        },
       },
       {
         user: users[1]._id,
@@ -205,13 +213,29 @@ const seedData = async () => {
         seatsBooked: 1,
         totalAmount: 15000,
         status: "confirmed",
+        bookingDetails: {
+          fullName: "Jane Smith",
+          email: "jane@example.com",
+          phone: "+2348011122233",
+          emergencyContact: "Tom Smith",
+          emergencyPhone: "+2348023344556",
+          specialRequests: "",
+        },
       },
       {
-        user: users[2]._id,
-        event: events[2]._id,
-        seatsBooked: 1,
+        user: users[3]._id,
+        event: events[3]._id,
+        seatsBooked: 1000,
         totalAmount: 50000,
         status: "confirmed",
+        bookingDetails: {
+          fullName: "Mike Johnson",
+          email: "mike@example.com",
+          phone: "+2348076543210",
+          emergencyContact: "Anna Johnson",
+          emergencyPhone: "+2348056677889",
+          specialRequests: "Wheelchair access",
+        },
       },
     ]);
 
