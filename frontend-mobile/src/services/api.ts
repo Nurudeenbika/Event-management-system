@@ -422,7 +422,7 @@ class ApiService {
     page?: number;
     limit?: number;
     status?: string;
-  }): Promise<ApiResponse<Booking>> {
+  }): Promise<ApiResponse<{ bookings: Booking[] }>> {
     return this.client.get("/bookings/user", params);
   }
 

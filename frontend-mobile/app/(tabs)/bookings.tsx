@@ -115,6 +115,52 @@ const BookingsScreen: React.FC = () => {
     loadBookings();
   }, [filterStatus]);
 
+  // const loadBookings = async (page: number = 1) => {
+  //   try {
+  //     setLoading(page === 1);
+
+  //     const params: any = {
+  //       page,
+  //       limit: pagination.limit,
+  //     };
+
+  //     if (filterStatus !== "all") {
+  //       params.status = filterStatus;
+  //     }
+
+  //     let response;
+  //     if (user?.role === "admin") {
+  //       response = await apiService.getAllBookings(params);
+  //     } else {
+  //       response = await apiService.getUserBookings(params);
+  //     }
+
+  //     if (response.data) {
+  //       const {
+  //         bookings: newBookings,
+  //         pagination: newPagination,
+  //         stats: newStats,
+  //       } = response.data.data;
+  //       console.log("Response Data:", response.data);
+
+  //       if (page === 1) {
+  //         setBookings(newBookings);
+  //       } else {
+  //         setBookings((prev) => [...prev, ...newBookings]);
+  //       }
+
+  //       setPagination(newPagination);
+  //       if (newStats) {
+  //         setStats(newStats);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("Error loading bookings:", error);
+  //     Alert.alert("Error", "Failed to load bookings");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const loadBookings = async (page: number = 1) => {
     try {
       setLoading(page === 1);
@@ -142,13 +188,14 @@ const BookingsScreen: React.FC = () => {
           stats: newStats,
         } = response.data;
 
-        if (page === 1) {
-          setBookings(newBookings);
-        } else {
-          setBookings((prev) => [...prev, ...newBookings]);
-        }
+        setBookings((prev) =>
+          page === 1 ? newBookings : [...prev, ...newBookings]
+        );
+        setPagination({
+          ...newPagination,
+          page, // manually track the current page
+        });
 
-        setPagination(newPagination);
         if (newStats) {
           setStats(newStats);
         }
@@ -464,7 +511,7 @@ const BookingsScreen: React.FC = () => {
             ListEmptyComponent={renderEmptyState}
             scrollEnabled={false}
             onEndReached={() => {
-              if (pagination.page < pagination.pages) {
+              if (!loading && pagination.page < pagination.pages) {
                 loadBookings(pagination.page + 1);
               }
             }}
