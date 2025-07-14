@@ -413,7 +413,7 @@ class ApiService {
     limit?: number;
     status?: string;
   }): Promise<ApiResponse<Booking>> {
-    return this.client.get("/admin/bookings", params);
+    return this.client.get("/bookings/admin/all", params);
   }
 
   // For regular users - get their own bookings

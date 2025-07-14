@@ -2,6 +2,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const storage = {
   setItem: async (key: string, value: string) => {
+    if (value === undefined || value === null) {
+      console.warn(`Skipping storage: value for key "${key}" is ${value}`);
+      await AsyncStorage.removeItem(key); // Optional: clear the item
+      return;
+    }
+
     try {
       await AsyncStorage.setItem(key, value);
     } catch (error) {
