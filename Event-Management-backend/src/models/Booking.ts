@@ -19,6 +19,13 @@ export interface IBooking extends Document {
     emergencyPhone: string;
     specialRequests?: string;
   };
+  paymentDetails?: {
+    method?: string;
+    transactionId?: string;
+    status?: "pending" | "completed" | "failed";
+    amountPaid?: number;
+    paidAt?: Date;
+  };
 }
 
 // Mongoose schema definition
@@ -95,6 +102,30 @@ const bookingSchema = new Schema<IBooking>(
       specialRequests: {
         type: String,
         default: "",
+      },
+    },
+    paymentDetails: {
+      method: {
+        type: String,
+        default: "mock", // or "card", "bank_transfer", etc.
+      },
+      transactionId: {
+        type: String,
+      },
+      status: {
+        type: String,
+        enum: {
+          values: ["pending", "completed", "failed"],
+          message: "Invalid payment status",
+        },
+        default: "pending",
+      },
+      amountPaid: {
+        type: Number,
+        default: 0,
+      },
+      paidAt: {
+        type: Date,
       },
     },
   },

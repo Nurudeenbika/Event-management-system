@@ -109,6 +109,9 @@ export const bookingSchema = Joi.object({
       }),
     specialRequests: Joi.string().allow("").optional(),
   }).required(),
+  paymentDetails: Joi.object({
+    method: Joi.string().optional(),
+  }).optional(),
 });
 
 export const validateRegister = validateRequest(registerSchema);
