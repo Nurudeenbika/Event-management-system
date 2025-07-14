@@ -14,7 +14,7 @@ const router = Router();
 
 // User routes
 router.post("/", authenticate, validateBooking, createBooking);
-router.get("/my-bookings", authenticate, getUserBookings);
+router.get("/user", authenticate, getUserBookings);
 router.get("/:id", authenticate, getBookingById);
 router.patch("/:id/cancel", authenticate, cancelBooking);
 
