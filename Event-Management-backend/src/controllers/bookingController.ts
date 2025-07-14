@@ -149,21 +149,16 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
 };
 
 // Updated cancel booking to handle refunds
-export const cancelBooking = async (req: AuthRequest, res: Response) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
 
+export const cancelBooking = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
 
     // Find the booking
-    const booking = await Booking.findOne({ _id: id, user: userId }).session(
-      session
-    );
+    const booking = await Booking.findOne({ _id: id, user: userId });
 
     if (!booking) {
-      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Booking not found",
@@ -172,7 +167,6 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
 
     // Check if booking is already cancelled
     if (booking.status === "cancelled") {
-      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Booking is already cancelled",
@@ -180,23 +174,21 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
     }
 
     // Find the event to restore seats
-    const event = await Event.findById(booking.event).session(session);
+    const event = await Event.findById(booking.event);
     if (!event) {
-      await session.abortTransaction();
       return res.status(404).json({
         success: false,
         message: "Event not found",
       });
     }
 
-    // Check if event has already passed (optional business rule)
+    // Check if event has already passed
     const now = new Date();
     const eventDate = new Date(event.date);
     const hoursDifference =
       (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
     if (hoursDifference < 24) {
-      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Cannot cancel booking less than 24 hours before the event",
@@ -205,29 +197,24 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
 
     // Update booking status
     booking.status = "cancelled";
-    await booking.save({ session });
+    await booking.save();
 
     // Restore available seats
     event.availableSeats += booking.seatsBooked;
-    await event.save({ session });
+    await event.save();
 
-    await session.commitTransaction();
-
-    // Process refund AFTER successful cancellation (outside transaction)
+    // Process refund AFTER cancellation
     if (booking.paymentId) {
       try {
-        // TODO: Implement actual refund logic here
         console.log(`Processing refund for payment ${booking.paymentId}`);
 
-        // Update booking with refund status
         await Booking.findByIdAndUpdate(booking._id, {
           paymentStatus: "refunded",
           refundedAt: new Date(),
         });
       } catch (refundError) {
         console.error("Refund failed:", refundError);
-        // Booking is still cancelled, but refund failed
-        // You might want to handle this case differently
+        // Handle refund error silently
       }
     }
 
@@ -237,14 +224,11 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
       data: { booking },
     });
   } catch (error) {
-    await session.abortTransaction();
     res.status(500).json({
       success: false,
       message: "Error cancelling booking",
       error: error instanceof Error ? error.message : "Unknown error",
     });
-  } finally {
-    session.endSession();
   }
 };
 
