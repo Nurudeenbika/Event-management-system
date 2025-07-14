@@ -370,6 +370,7 @@ class ApiService {
   async createBooking(bookingData: {
     event: string;
     seatsBooked: number;
+
     bookingDetails: {
       fullName: string;
       email: string;
@@ -377,7 +378,9 @@ class ApiService {
       emergencyContact: string;
       emergencyPhone: string;
       specialRequests: string;
-      agreeToTerms: boolean;
+    };
+    paymentDetails?: {
+      method?: string;
     };
   }): Promise<ApiResponse<Booking>> {
     return this.client.post("/bookings", bookingData);

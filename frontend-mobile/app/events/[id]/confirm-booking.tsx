@@ -61,7 +61,9 @@ const ConfirmBookingScreen: React.FC = () => {
     specialRequests: "",
     agreeToTerms: false,
   });
-  const [errors, setErrors] = useState<Partial<BookingForm>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof BookingForm, string>>
+  >({});
 
   const seatsToBook = parseInt(seats || "1");
   const colorScheme: ColorSchemeName = Appearance.getColorScheme();
@@ -156,6 +158,7 @@ const ConfirmBookingScreen: React.FC = () => {
               const response = await apiService.createBooking({
                 event: event._id,
                 seatsBooked: seatsToBook,
+                paymentDetails: { method: "mock" },
                 bookingDetails: {
                   fullName: formData.fullName,
                   email: formData.email,
@@ -163,7 +166,6 @@ const ConfirmBookingScreen: React.FC = () => {
                   emergencyContact: formData.emergencyContact,
                   emergencyPhone: formData.emergencyPhone,
                   specialRequests: formData.specialRequests,
-                  agreeToTerms: formData?.agreeToTerms,
                 },
               });
 
