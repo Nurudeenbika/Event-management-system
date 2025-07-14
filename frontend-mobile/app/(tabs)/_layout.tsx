@@ -53,15 +53,15 @@ export default function TabLayout() {
           ),
         }}
       />
-      {/* <Tabs.Screen
-        name="explore"
+      <Tabs.Screen
+        name="bookings"
         options={{
-          title: "Explore",
+          title: "Bookings",
           tabBarIcon: ({ color }) => (
-            <Text style={{ color, fontSize: 16 }}>🔍</Text>
+            <Text style={{ color, fontSize: 16 }}>📋</Text>
           ),
         }}
-      /> */}
+      />
     </Tabs>
   );
 }

@@ -1,6 +1,3 @@
-// API Service for Event Management App
-// File: src/services/api.ts
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Base Configuration
@@ -197,7 +194,7 @@ class HttpClient {
     }
   }
 
-  private async request<T>(
+  public async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
@@ -399,7 +396,9 @@ class ApiService {
   }
 
   async cancelBooking(bookingId: string): Promise<ApiResponse> {
-    return this.client.delete(`/bookings/${bookingId}`);
+    return this.client.request(`/bookings/${bookingId}/cancel`, {
+      method: "PATCH",
+    });
   }
 
   async getEventBookings(

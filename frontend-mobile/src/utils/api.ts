@@ -55,6 +55,24 @@ export const apiClient = {
     return response.json();
   },
 
+  patch: async (endpoint: string, data?: any, token?: string) => {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: data ? JSON.stringify(data) : undefined,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Request failed");
+    }
+
+    return response.json();
+  },
+
   delete: async (endpoint: string, token?: string) => {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: "DELETE",

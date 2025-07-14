@@ -66,7 +66,7 @@ export const BookingProvider: React.FC<BookingProviderProps> = ({
     try {
       setLoading(true);
       setError(null);
-      await apiClient.put(`/bookings/${bookingId}/cancel`, {}, token);
+      await apiClient.patch(`/bookings/${bookingId}/cancel`, {}, token);
       setBookings((prev) =>
         prev.map((booking) =>
           booking._id === bookingId
