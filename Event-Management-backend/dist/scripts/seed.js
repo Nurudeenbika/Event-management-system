@@ -1,30 +1,33 @@
-import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
-import dotenv from "dotenv";
-import User from "../models/User";
-import Event from "../models/Event";
-import Booking from "../models/Booking";
-
-dotenv.config();
-
+"use strict";
+var __importDefault =
+  (this && this.__importDefault) ||
+  function (mod) {
+    return mod && mod.__esModule ? mod : { default: mod };
+  };
+Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = __importDefault(require("mongoose"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const dotenv_1 = __importDefault(require("dotenv"));
+const User_1 = __importDefault(require("../models/User"));
+const Event_1 = __importDefault(require("../models/Event"));
+const Booking_1 = __importDefault(require("../models/Booking"));
+dotenv_1.default.config();
 const seedData = async () => {
   try {
     // Connect to MongoDB
-    await mongoose.connect(
+    await mongoose_1.default.connect(
       process.env.MONGODB_URI ||
         "mongodb+srv://nurudeenhassan:Nurubika@cluster0.ri4ry38.mongodb.net/event-bookings?retryWrites=true&w=majority&appName=Cluster0"
     );
     console.log("Connected to MongoDB");
-
     // Clear existing data
-    await User.deleteMany({});
-    await Event.deleteMany({});
-    await Booking.deleteMany({});
+    await User_1.default.deleteMany({});
+    await Event_1.default.deleteMany({});
+    await Booking_1.default.deleteMany({});
     console.log("Cleared existing data");
-
     // Create admin user
-    const adminPassword = await bcrypt.hash("admin123", 12);
-    const admin = await User.create([
+    const adminPassword = await bcryptjs_1.default.hash("admin123", 12);
+    const admin = await User_1.default.create([
       {
         name: "Admin User",
         email: "admin@eventbooking.com",
@@ -38,10 +41,9 @@ const seedData = async () => {
         role: "admin",
       },
     ]);
-
     // Create regular users
-    const userPassword = await bcrypt.hash("user123", 12);
-    const users = await User.create([
+    const userPassword = await bcryptjs_1.default.hash("user123", 12);
+    const users = await User_1.default.create([
       {
         name: "John Doe",
         email: "john@example.com",
@@ -61,9 +63,8 @@ const seedData = async () => {
         role: "user",
       },
     ]);
-
     // Create events
-    const events = await Event.create([
+    const events = await Event_1.default.create([
       {
         title: "Tech Conference 2025",
         description:
@@ -190,9 +191,8 @@ const seedData = async () => {
         createdBy: admin[0]._id,
       },
     ]);
-
     // Create some bookings
-    const bookings = await Booking.create([
+    const bookings = await Booking_1.default.create([
       {
         user: users[0]._id,
         event: events[0]._id,
@@ -239,27 +239,24 @@ const seedData = async () => {
         },
       },
     ]);
-
     // Update available seats for booked events
-    await Event.findByIdAndUpdate(events[0]._id, {
+    await Event_1.default.findByIdAndUpdate(events[0]._id, {
       $inc: { availableSeats: -2 },
     });
-    await Event.findByIdAndUpdate(events[1]._id, {
+    await Event_1.default.findByIdAndUpdate(events[1]._id, {
       $inc: { availableSeats: -1 },
     });
-    await Event.findByIdAndUpdate(events[2]._id, {
+    await Event_1.default.findByIdAndUpdate(events[2]._id, {
       $inc: { availableSeats: -1 },
     });
-
     console.log("Seed data created successfully!");
     console.log(`Admin login: admin@eventbooking.com / admin123`);
     console.log(`User login examples: john@example.com / user123`);
-
     process.exit(0);
   } catch (error) {
     console.error("Error seeding data:", error);
     process.exit(1);
   }
 };
-
 seedData();
+//# sourceMappingURL=seed.js.map
