@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Base Configuration
-const API_BASE_URL = "http://172.26.102.136:5000/api"; // Replace with your actual API URL
+const API_BASE_URL = "https://vasrefil-event-backend.onrender.com/api"; // Replace with your actual API URL
 const API_TIMEOUT = 10000; // 10 seconds
 
 // Types and Interfaces
