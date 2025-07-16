@@ -4,6 +4,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  Platform,
   StyleSheet,
   ScrollView,
   TextInput,
@@ -18,6 +19,7 @@ import { Colors } from "@/constants/Colors";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { apiService, Event, UpdateEventData } from "@/src/services/api";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 interface Theme {
   text: string;
@@ -50,10 +52,19 @@ const EditEventScreen: React.FC = () => {
   const [eventPrice, setEventPrice] = useState<string>("");
   const [totalSeats, setTotalSeats] = useState<string>("");
   const [availableSeats, setAvailableSeats] = useState<string>("");
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
 
   const colorScheme: ColorSchemeName = Appearance.getColorScheme();
   const theme: Theme = colorScheme === "dark" ? Colors.dark : Colors.light;
   const styles = createStyles(theme, colorScheme);
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === "ios");
+    if (selectedDate) {
+      setEventDate(selectedDate.toISOString().split("T")[0]); // "YYYY-MM-DD"
+    }
+  };
 
   // Load event data and other initial data
   useEffect(() => {
@@ -174,6 +185,7 @@ const EditEventScreen: React.FC = () => {
       const response = await apiService.updateEvent(id!, eventData);
 
       if (response.success) {
+        await loadEventData();
         Alert.alert("Success", "Event updated successfully!", [
           {
             text: "OK",
@@ -272,30 +284,62 @@ const EditEventScreen: React.FC = () => {
             />
           </View>
 
-          <Text style={styles.sectionTitle}>Date & Time</Text>
+          <Text style={styles.sectionTitle}>Date</Text>
 
-          <View style={styles.row}>
-            <View style={[styles.inputGroup, styles.halfWidth]}>
-              <Text style={styles.inputLabel}>Date</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={theme.placeholder}
-                value={eventDate}
-                onChangeText={setEventDate}
-              />
-            </View>
-            <View style={[styles.inputGroup, styles.halfWidth]}>
-              <Text style={styles.inputLabel}>Time</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="HH:MM"
-                placeholderTextColor={theme.placeholder}
-                value={eventTime}
-                onChangeText={setEventTime}
-              />
-            </View>
-          </View>
+          <TouchableOpacity
+            onPress={() => setShowDatePicker(true)}
+            style={[styles.input, { justifyContent: "center" }]}
+          >
+            <Text style={{ color: eventDate ? theme.text : theme.placeholder }}>
+              {eventDate || "Select Date"}
+            </Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={eventDate ? new Date(eventDate) : new Date()}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowDatePicker(false);
+                if (selectedDate) {
+                  const formattedDate = selectedDate
+                    .toISOString()
+                    .split("T")[0];
+                  setEventDate(formattedDate);
+                }
+              }}
+            />
+          )}
+          <Text style={styles.sectionTitle}>Time</Text>
+          <TouchableOpacity
+            onPress={() => setShowTimePicker(true)}
+            style={[styles.input, { justifyContent: "center" }]}
+          >
+            <Text style={{ color: eventTime ? theme.text : theme.placeholder }}>
+              {eventTime || "Select Time"}
+            </Text>
+          </TouchableOpacity>
+          {showTimePicker && (
+            <DateTimePicker
+              value={new Date(`1970-01-01T${eventTime || "12:00"}`)}
+              mode="time"
+              display="default"
+              onChange={(event, selectedTime) => {
+                setShowTimePicker(false);
+                if (selectedTime) {
+                  const hours = selectedTime
+                    .getHours()
+                    .toString()
+                    .padStart(2, "0");
+                  const minutes = selectedTime
+                    .getMinutes()
+                    .toString()
+                    .padStart(2, "0");
+                  setEventTime(`${hours}:${minutes}`);
+                }
+              }}
+            />
+          )}
 
           <Text style={styles.sectionTitle}>Location</Text>
 
@@ -376,7 +420,7 @@ const EditEventScreen: React.FC = () => {
                 keyboardType="numeric"
               />
             </View>
-            <View style={[styles.inputGroup, styles.halfWidth]}>
+            {/* <View style={[styles.inputGroup, styles.halfWidth]}>
               <Text style={styles.inputLabel}>Available Seats</Text>
               <TextInput
                 style={styles.input}
@@ -386,7 +430,7 @@ const EditEventScreen: React.FC = () => {
                 onChangeText={setAvailableSeats}
                 keyboardType="numeric"
               />
-            </View>
+            </View> */}
           </View>
 
           <View style={styles.actionButtons}>

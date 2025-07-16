@@ -6,6 +6,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  Platform,
   ScrollView,
   Modal,
   TextInput,
@@ -33,6 +34,7 @@ import {
   DashboardStats,
   CreateEventData,
 } from "../../src/services/api";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 type FilterStatus = "all" | "upcoming" | "past";
 
@@ -71,11 +73,20 @@ const DashboardScreen: React.FC = () => {
   const [eventCategory, setEventCategory] = useState<string>("");
   const [eventPrice, setEventPrice] = useState<string>("");
   const [totalSeats, setTotalSeats] = useState<string>("");
-  const [availableSeats, setAvailableSeats] = useState<string>("");
+  //const [availableSeats, setAvailableSeats] = useState<string>("");
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
 
   const colorScheme: ColorSchemeName = Appearance.getColorScheme();
   const theme: Theme = colorScheme === "dark" ? Colors.dark : Colors.light;
   const styles = createStyles(theme, colorScheme);
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === "ios");
+    if (selectedDate) {
+      setEventDate(selectedDate.toISOString().split("T")[0]); // "YYYY-MM-DD"
+    }
+  };
 
   // Load initial data
   useEffect(() => {
@@ -138,11 +149,11 @@ const DashboardScreen: React.FC = () => {
         // Apply client-side filtering for past/upcoming
         if (filterStatus === "upcoming") {
           filteredEvents = filteredEvents.filter(
-            (event) => new Date(event.date) >= now
+            (event: Event) => new Date(event.date) >= now
           );
         } else if (filterStatus === "past") {
           filteredEvents = filteredEvents.filter(
-            (event) => new Date(event.date) < now
+            (event: Event) => new Date(event.date) < now
           );
         }
 
@@ -192,8 +203,7 @@ const DashboardScreen: React.FC = () => {
       !eventLocation.trim() ||
       !eventCategory.trim() ||
       !eventPrice ||
-      !totalSeats ||
-      !availableSeats.trim()
+      !totalSeats
     ) {
       Alert.alert("Error", "Please fill in all fields");
       return;
@@ -210,7 +220,7 @@ const DashboardScreen: React.FC = () => {
         category: eventCategory,
         price: parseFloat(eventPrice),
         totalSeats: parseInt(totalSeats),
-        availableSeats: parseInt(availableSeats),
+        availableSeats: parseInt(totalSeats),
       };
 
       const response = await apiService.createEvent(eventData);
@@ -226,7 +236,6 @@ const DashboardScreen: React.FC = () => {
         setEventCategory("");
         setEventPrice("");
         setTotalSeats("");
-        setAvailableSeats("");
         setShowCreateModal(false);
 
         Alert.alert("Success", "Event created successfully!");
@@ -345,7 +354,10 @@ const DashboardScreen: React.FC = () => {
         <View style={styles.eventDetails}>
           <View style={styles.eventDetailRow}>
             <Feather name="calendar" size={16} color={theme.text} />
-            <Text style={styles.eventDetailText}>{formatDate(event.date)}</Text>
+            <Text style={styles.eventDetailText}>
+              {new Date(event.date).toISOString().split("T")[0]}, {event.time}{" "}
+              (GMT+1)
+            </Text>
           </View>
           <View style={styles.eventDetailRow}>
             <Feather name="map-pin" size={16} color={theme.text} />
@@ -556,20 +568,64 @@ const DashboardScreen: React.FC = () => {
                 numberOfLines={4}
               />
 
-              <TextInput
-                style={styles.input}
-                placeholder="Date (YYYY-MM-DD)"
-                placeholderTextColor={theme.placeholder}
-                value={eventDate}
-                onChangeText={setEventDate}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Time (HH:MM)"
-                placeholderTextColor={theme.placeholder}
-                value={eventTime}
-                onChangeText={setEventTime}
-              />
+              <TouchableOpacity
+                onPress={() => setShowDatePicker(true)}
+                style={[styles.input, { justifyContent: "center" }]}
+              >
+                <Text
+                  style={{ color: eventDate ? theme.text : theme.placeholder }}
+                >
+                  {eventDate || "Select Date"}
+                </Text>
+              </TouchableOpacity>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={eventDate ? new Date(eventDate) : new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowDatePicker(false);
+                    if (selectedDate) {
+                      const formattedDate = selectedDate
+                        .toISOString()
+                        .split("T")[0];
+                      setEventDate(formattedDate);
+                    }
+                  }}
+                />
+              )}
+
+              <TouchableOpacity
+                onPress={() => setShowTimePicker(true)}
+                style={[styles.input, { justifyContent: "center" }]}
+              >
+                <Text
+                  style={{ color: eventTime ? theme.text : theme.placeholder }}
+                >
+                  {eventTime || "Select Time"}
+                </Text>
+              </TouchableOpacity>
+              {showTimePicker && (
+                <DateTimePicker
+                  value={new Date(`1970-01-01T${eventTime || "12:00"}`)}
+                  mode="time"
+                  display="default"
+                  onChange={(event, selectedTime) => {
+                    setShowTimePicker(false);
+                    if (selectedTime) {
+                      const hours = selectedTime
+                        .getHours()
+                        .toString()
+                        .padStart(2, "0");
+                      const minutes = selectedTime
+                        .getMinutes()
+                        .toString()
+                        .padStart(2, "0");
+                      setEventTime(`${hours}:${minutes}`);
+                    }
+                  }}
+                />
+              )}
 
               <TextInput
                 style={styles.input}
@@ -630,14 +686,14 @@ const DashboardScreen: React.FC = () => {
                 onChangeText={setTotalSeats}
                 keyboardType="numeric"
               />
-              <TextInput
+              {/* <TextInput
                 style={styles.input}
                 placeholder="Available Seats"
                 placeholderTextColor={theme.placeholder}
                 value={availableSeats}
                 onChangeText={setAvailableSeats}
                 keyboardType="numeric"
-              />
+              /> */}
 
               <TouchableOpacity
                 style={styles.button}
@@ -682,7 +738,8 @@ const DashboardScreen: React.FC = () => {
                 <View style={styles.eventDetailRow}>
                   <Feather name="calendar" size={20} color={theme.text} />
                   <Text style={styles.eventDetailText}>
-                    {formatDate(selectedEvent.date)}
+                    {new Date(selectedEvent.date).toISOString().split("T")[0]},{" "}
+                    {selectedEvent.time} (GMT+1)
                   </Text>
                 </View>
                 <View style={styles.eventDetailRow}>

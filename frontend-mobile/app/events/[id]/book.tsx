@@ -149,7 +149,8 @@ const BookEventScreen: React.FC = () => {
             <View style={styles.eventDetailRow}>
               <Feather name="calendar" size={20} color={theme.text} />
               <Text style={styles.eventDetailText}>
-                {formatDate(event.date)}
+                {new Date(event.date).toISOString().split("T")[0]}, {event.time}{" "}
+                (GMT+1)
               </Text>
             </View>
             <View style={styles.eventDetailRow}>

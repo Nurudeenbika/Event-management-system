@@ -276,7 +276,10 @@ const ConfirmBookingScreen: React.FC = () => {
             <Text style={styles.eventTitle}>{event.title}</Text>
             <View style={styles.summaryRow}>
               <Feather name="calendar" size={16} color={theme.text} />
-              <Text style={styles.summaryText}>{formatDate(event.date)}</Text>
+              <Text style={styles.summaryText}>
+                {new Date(event.date).toISOString().split("T")[0]}, {event.time}{" "}
+                (GMT+1)
+              </Text>
             </View>
             <View style={styles.summaryRow}>
               <Feather name="map-pin" size={16} color={theme.text} />

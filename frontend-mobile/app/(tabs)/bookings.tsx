@@ -27,7 +27,7 @@ import {
 import { apiService } from "../../src/services/api";
 
 // Types
-type BookingStatus = "all" | "confirmed" | "cancelled" | "pending";
+type BookingStatus = "all" | "confirmed" | "cancelled";
 
 interface User {
   _id: string;
@@ -51,26 +51,10 @@ interface Booking {
   event: Event;
   seatsBooked: number;
   totalAmount: number;
-  status: "confirmed" | "cancelled" | "pending";
+  status: "confirmed" | "cancelled";
   bookingDate: string;
   createdAt: string;
   updatedAt: string;
-}
-
-interface BookingResponse {
-  bookings: Booking[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
-  stats?: {
-    _id: string;
-    count: number;
-    totalSeats: number;
-    totalRevenue: number;
-  }[];
 }
 
 interface Theme {
@@ -219,8 +203,6 @@ const BookingsScreen: React.FC = () => {
         return "#34C759";
       case "cancelled":
         return "#FF3B30";
-      case "pending":
-        return "#FF9500";
       default:
         return "#8E8E93";
     }
@@ -232,8 +214,6 @@ const BookingsScreen: React.FC = () => {
         return "check-circle";
       case "cancelled":
         return "x-circle";
-      case "pending":
-        return "clock";
       default:
         return "help-circle";
     }
@@ -385,12 +365,7 @@ const BookingsScreen: React.FC = () => {
     return <View style={styles.container}>{renderLoadingState()}</View>;
   }
 
-  const filterButtons: BookingStatus[] = [
-    "all",
-    "confirmed",
-    "pending",
-    "cancelled",
-  ];
+  const filterButtons: BookingStatus[] = ["all", "confirmed", "cancelled"];
 
   return (
     <View style={styles.container}>
@@ -591,7 +566,7 @@ const BookingsScreen: React.FC = () => {
                   style={[styles.button, styles.primaryButton]}
                   onPress={() => {
                     setShowBookingDetails(false);
-                    router.push(`/events/${selectedBooking.event._id}` as any);
+                    router.push(`/events/${selectedBooking.event._id}`);
                   }}
                 >
                   <Text style={styles.buttonText}>View Event</Text>
