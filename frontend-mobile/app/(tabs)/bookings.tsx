@@ -33,6 +33,18 @@ interface User {
   _id: string;
   name: string;
   email: string;
+  phone: string;
+  emergencyContact: string;
+  emergencyPhone: string;
+}
+
+interface BookingDetails {
+  fullName: string;
+  email: string;
+  phone: string;
+  emergencyContact: string;
+  emergencyPhone: string;
+  specialRequests?: string;
 }
 
 interface Event {
@@ -49,6 +61,7 @@ interface Booking {
   _id: string;
   user: User;
   event: Event;
+  bookingDetails: BookingDetails;
   seatsBooked: number;
   totalAmount: number;
   status: "confirmed" | "cancelled";
@@ -513,12 +526,32 @@ const BookingsScreen: React.FC = () => {
                   </Text>
                 </View>
 
-                <View style={styles.detailRow}>
+                {/* <View style={styles.detailRow}>
                   <Feather name="clock" size={20} color={theme.text} />
                   <Text style={styles.detailText}>
                     Booked on {formatDate(selectedBooking.bookingDate)}
                   </Text>
                 </View>
+                <View style={styles.detailRow}>
+                  <Feather name="phone" size={20} color={theme.text} />
+                  <Text style={styles.detailText}>
+                    {selectedBooking.user.phone}
+                  </Text>
+                </View> */}
+
+                {/* <View style={styles.detailRow}>
+                  <Feather name="user-check" size={20} color={theme.text} />
+                  <Text style={styles.detailText}>
+                    Emergency Contact: {selectedBooking.user.emergencyContact}
+                  </Text>
+                </View>
+
+                <View style={styles.detailRow}>
+                  <Feather name="phone" size={20} color={theme.text} />
+                  <Text style={styles.detailText}>
+                    Emergency Phone: {selectedBooking.user.emergencyPhone}
+                  </Text>
+                </View> */}
 
                 {user?.role === "admin" && (
                   <View style={styles.detailRow}>
@@ -528,6 +561,28 @@ const BookingsScreen: React.FC = () => {
                     </Text>
                   </View>
                 )}
+
+                <View style={styles.detailRow}>
+                  <Feather name="user" size={20} color={theme.text} />
+                  <Text style={styles.detailText}>
+                    Emergency Contact:{" "}
+                    {selectedBooking.bookingDetails.emergencyContact}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Feather name="phone-call" size={20} color={theme.text} />
+                  <Text style={styles.detailText}>
+                    Emergency phone:{" "}
+                    {selectedBooking.bookingDetails.emergencyPhone}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Feather name="info" size={20} color={theme.text} />
+                  <Text style={styles.detailText}>
+                    Special Requests:{" "}
+                    {selectedBooking.bookingDetails.specialRequests || "None"}
+                  </Text>
+                </View>
               </View>
 
               {/* Status */}

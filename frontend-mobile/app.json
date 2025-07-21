@@ -30,7 +30,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/vasrefil_image.png",
-          "imageWidth": 10,
+          "imageWidth": 200,
           "resizeMode": "cover",
           "backgroundColor": "#ffffff"
         }
