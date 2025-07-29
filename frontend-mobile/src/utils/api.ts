@@ -1,4 +1,4 @@
-const BASE_URL = "https://vasrefil-event-backend.onrender.com/api"; // Replace with your backend URL
+const BASE_URL = "https://vasrefil-event-backend.up.railway.app/api"; // Replace with your backend URL
 // If using Expo, you might need to use the IP address of your machine instead of localhost
 
 export const apiClient = {
